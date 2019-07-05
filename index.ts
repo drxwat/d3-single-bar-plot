@@ -3,6 +3,7 @@ import { select } from 'd3-selection';
 import { scaleLinear } from 'd3-scale';
 import { axisBottom } from 'd3-axis';
 import { transition, Transition } from 'd3-transition';
+import { drawBgBar, drawBar, onMouseOverFactory } from './helpers';
 
 const MARGIN = 25;
 const W = 400;
@@ -31,24 +32,15 @@ plotRoot
   .attr('transform', `translate(0, ${H})`)
   .call(axisBottom(scaleX));
 
-const updateSelection = plotRoot
-  .selectAll<SVGRectElement, unknown>('rect')
-  .data(data);
+const bgRoot = plotRoot.append('g');
+const barRoot = plotRoot.append('g');
 
-const updateAndEnterSelection = updateSelection
-  .enter()
-  .append('rect')
-  .merge(updateSelection);
+const bgMouseOver = onMouseOverFactory(bgRoot, barRoot, true);
+const colorMouseOver = onMouseOverFactory(bgRoot, barRoot, false);
 
-(transition.call(updateAndEnterSelection) as
-  Transition<SVGRectElement, unknown, null, undefined>)
-  .selectAll(() => updateAndEnterSelection.nodes())
-  .duration(700)
-  .attr('x', 0)
-  .attr('y', 0)
-  .attr('width', scaleX(dataSum))
-  .attr('height', H)
-  .attr("fill", "#20c997")
-  .attr('stroke', '#fff')
-  .attr('stroke-width', '3')
-  .attr('opacity', '.8');
+
+drawBgBar(bgRoot, scaleX(dataSum), H, bgMouseOver);
+
+drawBar(barRoot, data, scaleX(0), H, 0, colorMouseOver);
+drawBar(barRoot, data, scaleX(data[0]), H, 700, colorMouseOver);
+
